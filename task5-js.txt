@@ -1,0 +1,74 @@
+// OpenWeatherMap API key
+const apiKey = 'your_openweathermap_api_key'; // Replace with your actual API key
+
+// DOM elements
+const locationForm = document.getElementById('locationForm');
+const locationInput = document.getElementById('location');
+const getLocationBtn = document.getElementById('getLocationBtn');
+const weatherDisplay = document.getElementById('weatherDetails');
+
+// Function to fetch weather data by city name
+async function getWeatherByCity(city) {
+    try {
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+        const data = await response.json();
+        if (response.ok) {
+            displayWeatherData(data);
+        } else {
+            weatherDisplay.innerHTML = `<p>Error: ${data.message}</p>`;
+        }
+    } catch (error) {
+        weatherDisplay.innerHTML = `<p>Error fetching weather data. Please try again.</p>`;
+    }
+}
+
+// Function to fetch weather data by geolocation
+async function getWeatherByCoords(lat, lon) {
+    try {
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
+        const data = await response.json();
+        if (response.ok) {
+            displayWeatherData(data);
+        } else {
+            weatherDisplay.innerHTML = `<p>Error: ${data.message}</p>`;
+        }
+    } catch (error) {
+        weatherDisplay.innerHTML = `<p>Error fetching weather data. Please try again.</p>`;
+    }
+}
+
+// Function to display weather data
+function displayWeatherData(data) {
+    const weatherHTML = `
+        <h3>Location: ${data.name}, ${data.sys.country}</h3>
+        <p>Temperature: ${data.main.temp}°C</p>
+        <p>Weather: ${data.weather[0].description}</p>
+        <p>Humidity: ${data.main.humidity}%</p>
+        <p>Wind Speed: ${data.wind.speed} m/s</p>
+    `;
+    weatherDisplay.innerHTML = weatherHTML;
+}
+
+// Event listener for city name form submission
+locationForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const city = locationInput.value;
+    if (city) {
+        getWeatherByCity(city);
+        locationInput.value = ''; // Clear input after search
+    }
+});
+
+// Event listener for "Use My Location" button
+getLocationBtn.addEventListener('click', function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const { latitude, longitude } = position.coords;
+            getWeatherByCoords(latitude, longitude);
+        }, () => {
+            weatherDisplay.innerHTML = '<p>Error: Unable to retrieve your location.</p>';
+        });
+    } else {
+        weatherDisplay.innerHTML = '<p>Error: Geolocation is not supported by your browser.</p>';
+    }
+});
